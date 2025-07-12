@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>All Transactions (History)</h2>
+<table class="table">
+  <thead><tr><th>When</th><th>Item</th><th>Buyer</th><th>Recipients</th><th>Cost</th></tr></thead>
+  <tbody>
+  {% for t in transactions %}
+    <tr>
+      <td>{{ t.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{{ t.item_name }}</td>
+      <td>{{ t.buyer.name }}</td>
+      <td>{{ ", ".join([r.name for r in t.recipients]) }}</td>
+      <td>{{ t.cost }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

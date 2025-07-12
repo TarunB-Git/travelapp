@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Transactions</h2>
+
+<form method="post" class="row g-2 mb-4">
+  <div class="col-md-2"><input name="item_name" placeholder="Item" class="form-control"></div>
+  <div class="col-md-1"><input name="cost" type="number" step="0.01" placeholder="Cost" class="form-control"></div>
+  <div class="col-md-2">
+    <select name="budget_category" class="form-select">
+      {% for b in budgets %}<option>{{ b.category }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select name="buyer_id" class="form-select">
+      {% for p in people %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select name="recipient_ids" multiple class="form-select">
+      {% for p in people %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-primary">Add</button></div>
+</form>
+
+<table class="table">
+  <thead><tr>
+    <th>Item</th><th>Cost</th><th>Category</th><th>Buyer</th><th>Recipients</th><th>When</th>
+  </tr></thead>
+  <tbody>
+  {% for t in transactions %}
+    <tr>
+      <td>{{ t.item_name }}</td>
+      <td>{{ t.cost }}</td>
+      <td>{{ t.budget_category }}</td>
+      <td>{{ t.buyer.name }}</td>
+      <td>
+        {% for r in t.recipients %}
+          {{ r.name }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </td>
+      <td>{{ t.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

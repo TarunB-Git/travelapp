@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>People</h2>
+<form method="post" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input name="name" class="form-control" placeholder="New person name">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-primary">Add</button>
+  </div>
+</form>
+<ul class="list-group">
+  {% for p in people %}
+    <li class="list-group-item">{{ p.name }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
