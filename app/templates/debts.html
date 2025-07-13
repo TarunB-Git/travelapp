@@ -1,27 +1,33 @@
 {% extends "base.html" %}
 {% block body %}
 <h2>Debts</h2>
-<table class="table table-bordered table-sm">
-  <thead>
-    <tr>
-      <th>Person</th>
-      <th>Total Owed</th>
-      <th>Owed To</th>
-      {% for p in table[0].per_person %}<th>{{ p }}</th>{% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in table %}
+{% if table %}
+  <table class="table table-bordered table-sm">
+    <thead>
       <tr>
-        <td>{{ row.person }}</td>
-        <td>{{ row.total }}</td>
-        <td>{{ ", ".join(row.to) }}</td>
-        {% for val in row.per_person.values() %}
-          <td>{{ val }}</td>
+        <th>Person</th>
+        <th>Total Owed</th>
+        <th>Owed To</th>
+        {% for p in table[0].per_person %}
+          <th>{{ p }}</th>
         {% endfor %}
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {% for row in table %}
+        <tr>
+          <td>{{ row.person }}</td>
+          <td>{{ row.total }}</td>
+          <td>{{ ", ".join(row.to) }}</td>
+          {% for val in row.per_person.values() %}
+            <td>{{ val }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No unpaid debts found.</p>
+{% endif %}
 {% endblock %}
 
