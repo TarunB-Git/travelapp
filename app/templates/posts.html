@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Message Board</h2>
+
+<form method="post" enctype="multipart/form-data" class="mb-4">
+  <div class="mb-2">
+    <input name="title" placeholder="Title (optional)" class="form-control">
+  </div>
+  <div class="mb-2">
+    <textarea name="body" required placeholder="Message" class="form-control"></textarea>
+  </div>
+  <div class="mb-2">
+    <input name="author" placeholder="Your name (optional)" class="form-control">
+  </div>
+  <div class="mb-2">
+    <input type="file" name="image" accept="image/*" class="form-control">
+  </div>
+  <button class="btn btn-primary">Post</button>
+</form>
+
+<hr>
+
+{% for post in posts %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ post.title or "Untitled" }}</h5>
+      <p class="card-text">{{ post.body }}</p>
+      <p class="text-muted small">By {{ post.author }} – {{ post.timestamp.strftime("%Y-%m-%d %H:%M") }}</p>
+      <img src="{{ post.image_path }}" class="img-fluid rounded" style="max-height: 200px;">
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}
