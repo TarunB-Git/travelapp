@@ -9,6 +9,11 @@ def create_app() -> Flask:
 
     db.init_app(app)
     messages_db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
+        messages_db.create_all()
+
     register_blueprints(app)
 
     return app
