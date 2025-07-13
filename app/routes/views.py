@@ -140,12 +140,56 @@ def transactions_page():
 
     return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
 
+import pandas as pd
+from flask import request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
+
 @views_bp.route("/transactions/import", methods=["POST"])
+@admin_required  # If using admin control
 def import_transactions():
-    from app.utils.import_utils import import_excel_transactions
     file = request.files.get("file")
-    if file and file.filename.endswith(".xlsx"):
-        import_excel_transactions(file)
+    if not file:
+        flash("No file uploaded.", "danger")
+        return redirect(url_for("views_bp.transactions_page"))
+
+    filename = file.filename.lower()
+    if filename.endswith(".csv"):
+        df = pd.read_csv(file)
+    elif filename.endswith(".xlsx"):
+        df = pd.read_excel(file)
+    else:
+        flash("Unsupported file format. Please upload a .csv or .xlsx file.", "danger")
+        return redirect(url_for("views_bp.transactions_page"))
+
+    required_cols = {"timestamp", "item", "cost", "buyer", "category", "recipients"}
+    if not required_cols.issubset(set(df.columns.str.lower())):
+        flash("Missing required columns in file.", "danger")
+        return redirect(url_for("views_bp.transactions_page"))
+
+    for _, row in df.iterrows():
+        try:
+            buyer = Person.query.filter_by(name=str(row["buyer"]).strip()).first()
+            if not buyer:
+                continue
+
+            rec_names = str(row["recipients"]).split(",")
+            recipients = Person.query.filter(Person.name.in_([n.strip() for n in rec_names])).all()
+
+            txn = Transaction(
+                item_name=str(row["item"]),
+                cost=float(row["cost"]),
+                buyer_id=buyer.id,
+                budget_category=str(row["category"]),
+                timestamp=pd.to_datetime(row["timestamp"])
+            )
+            txn.recipients.extend(recipients)
+            db.session.add(txn)
+        except Exception as e:
+            flash(f"Error on row: {e}", "warning")
+
+    db.session.commit()
+    recalculate_debts()
+    flash("Transactions imported successfully!", "success")
     return redirect(url_for("views_bp.transactions_page"))
 
 
