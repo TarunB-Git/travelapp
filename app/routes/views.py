@@ -145,7 +145,7 @@ from flask import request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 
 @views_bp.route("/transactions/import", methods=["POST"])
-@admin_required  # If using admin control
+
 def import_transactions():
     file = request.files.get("file")
     if not file:
