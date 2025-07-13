@@ -5,7 +5,7 @@ class Debt(db.Model):
     lender_id = db.Column(db.Integer, db.ForeignKey("person.id"), nullable=False)
     borrower_id = db.Column(db.Integer, db.ForeignKey("person.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-
+    is_paid = db.Column(db.Boolean, default=False)
     lender = db.relationship("Person", foreign_keys=[lender_id], backref="lent_debts")
     borrower = db.relationship("Person", foreign_keys=[borrower_id], backref="owed_debts")
 
