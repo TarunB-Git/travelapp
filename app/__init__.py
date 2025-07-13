@@ -8,9 +8,6 @@ def create_app() -> Flask:
     app.config.from_object(Config)
 
     db.init_app(app)
-    print("Initializing messages_db on app")
-    print("Initializing")
-    messages_db.init_app(app)
 
    
         
