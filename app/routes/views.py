@@ -139,6 +139,15 @@ def transactions_page():
 
     return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
 
+@views_bp.route("/transactions/import", methods=["POST"])
+def import_transactions():
+    from app.utils.import_utils import import_excel_transactions
+    file = request.files.get("file")
+    if file and file.filename.endswith(".xlsx"):
+        import_excel_transactions(file)
+    return redirect(url_for("views_bp.transactions_page"))
+
+
 @views_bp.route("/debts")
 @login_required
 def debts_page():
