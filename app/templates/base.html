@@ -10,13 +10,27 @@
   />
 </head>
 <body class="p-4 bg-light">
-  <nav class="nav mb-4 flex-wrap">
-    <a class="nav-link" href="{{ url_for('views_bp.people_page') }}">People</a>
-    <a class="nav-link" href="{{ url_for('views_bp.budgets_page') }}">Budgets</a>
-    <a class="nav-link" href="{{ url_for('views_bp.transactions_page') }}">Transactions</a>
-    <a class="nav-link" href="{{ url_for('views_bp.debts_page') }}">Debts</a>
-    <a class="nav-link" href="{{ url_for('views_bp.history_page') }}">History</a>
-  </nav>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">BudgetApp</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="/people">People</a></li>
+        <li class="nav-item"><a class="nav-link" href="/budgets">Budgets</a></li>
+        <li class="nav-item"><a class="nav-link" href="/transactions">Transactions</a></li>
+        <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/debts">Debts</a></li>
+        <li class="nav-item"><a class="nav-link" href="/budget-stats">Stats</a></li>
+        <li class="nav-item"><a class="nav-link" href="/export/transactions.csv">Export TXNs</a></li>
+        <li class="nav-item"><a class="nav-link" href="/export/budgets.csv">Export Budgets</a></li>
+        <li class="nav-item"><a class="nav-link" href="/export/debts.csv">Export Debts</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 
   <div class="container-fluid px-3">
     {% block body %}{% endblock %}
