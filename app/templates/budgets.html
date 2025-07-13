@@ -1,63 +1,61 @@
 {% extends "base.html" %}
 {% block body %}
-<h2>Budgets</h2>
+<h2 class="mb-4">Budget Statistics (Today)</h2>
 
-<h4>Add New Budget</h4>
-<form method="post" class="row g-2 mb-3">
-  <input type="hidden" name="action" value="add">
-  <div class="col-auto"><input name="category" placeholder="Category" class="form-control"></div>
-  <div class="col-auto"><input name="daily_limit" placeholder="Daily limit" class="form-control"></div>
-  <div class="col-auto"><input name="total_limit" placeholder="Total limit" class="form-control"></div>
-  <div class="col-auto"><button class="btn btn-primary">Add Budget</button></div>
-</form>
-
-<hr>
-
-<h4>Assign Budget to People</h4>
-<form method="post" class="row g-2 mb-3">
-  <input type="hidden" name="action" value="assign">
-  <div class="col-auto">
-    <select name="budget_id" class="form-select">
-      {% for b in budgets %}
-        <option value="{{ b.id }}">{{ b.category }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-auto">
-    <select name="person_ids" multiple class="form-select">
-      {% for p in people %}
-        <option value="{{ p.id }}">{{ p.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-auto">
-    <button class="btn btn-secondary">Assign</button>
-  </div>
-</form>
-
-<hr>
-
-<h4>All Budgets</h4>
-<table class="table">
-  <thead><tr><th>Category</th><th>Limits</th><th>Assigned To</th><th>Actions</th></tr></thead>
-  <tbody>
-  {% for b in budgets %}
-    <tr>
-      <td>{{ b.category }}</td>
-      <td>{{ b.daily_limit or '-' }} / {{ b.total_limit or '-' }}</td>
-      <td>{{ b.people | map(attribute='name') | join(', ') or "—" }}</td>
-
-      <td>
-        {% if session.admin %}
-        <form method="post" class="d-inline">
-          <input type="hidden" name="action" value="delete">
-          <input type="hidden" name="delete_id" value="{{ b.id }}">
-          <button class="btn btn-sm btn-danger">Delete</button>
-        </form>
+<div class="table-responsive">
+  <table class="table table-bordered table-sm">
+    <thead>
+      <tr>
+        <th>Person</th>
+        {% if table and table[0].categories %}
+          {% for c in table[0].categories %}
+            <th>{{ c.category }} Spent / Limit</th>
+            <th>{{ c.category }} Remaining</th>
+          {% endfor %}
         {% endif %}
-      </td>
-    </tr>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in table %}
+        <tr>
+          <td>{{ row.name }}</td>
+          {% for c in row.categories %}
+            <td>{{ c.spent }} / {{ c.limit }}</td>
+            <td>{{ c.remaining }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<hr class="my-4">
+
+<div class="row">
+  {% for donut in donut_data %}
+    <div class="col-md-4 col-sm-6 mb-4 text-center">
+      <h6>{{ donut.person }} – {{ donut.category }}</h6>
+      <canvas id="chart-{{ loop.index }}"></canvas>
+      <script>
+        new Chart(document.getElementById("chart-{{ loop.index }}"), {
+          type: 'doughnut',
+          data: {
+            labels: ["Spent", "Remaining"],
+            datasets: [{
+              data: [{{ donut.spent }}, {{ donut.remaining }}],
+              backgroundColor: ['#dc3545', '#28a745']
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      </script>
+    </div>
   {% endfor %}
-  </tbody>
-</table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
