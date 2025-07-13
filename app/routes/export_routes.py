@@ -36,7 +36,6 @@ def export_budgets():
     return Response(si.getvalue(), mimetype="text/csv", headers={"Content-Disposition": "attachment; filename=budgets.csv"})
 
 @export_bp.route("/export/budget-stats.csv")
-@admin_required
 def export_budget_stats():
     from collections import defaultdict
     from datetime import date
