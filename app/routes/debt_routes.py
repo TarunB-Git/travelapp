@@ -1,10 +1,11 @@
-from flask import render_template, request, redirect, url_for, session, Response, Blueprint
+from flask import Blueprint, render_template, request, redirect, url_for, session, Response
 from app.models import Person, Debt
 from app.extensions import db
+from app.routes.views import login_required, admin_required
 import csv
 from io import StringIO
 
-debt_bp= Blueprint("debt_bp", name)
+debt_bp = Blueprint("debt_bp", __name__)
 
 @debt_bp.route("/debts", methods=["GET", "POST"])
 @login_required
@@ -16,11 +17,14 @@ def debts_page():
     for p in people:
         owed = [d for d in debts if d.debtor_id == p.id]
         by_person = {}
+
         for d in owed:
+            # Skip intra-group debt
             if d.creditor.group_id and d.creditor.group_id == p.group_id:
-                continue  # skip intra-group debt
+                continue
             key = d.creditor.name
             by_person[key] = by_person.get(key, 0) + d.amount
+
         table.append({
             "person": p.name,
             "total": round(sum(by_person.values()), 2),
@@ -54,7 +58,9 @@ def export_debts():
     writer.writerow(["Debtor", "Creditor", "Amount", "Status"])
     for d in Debt.query.all():
         writer.writerow([
-            d.debtor.name, d.creditor.name, d.amount,
+            d.debtor.name,
+            d.creditor.name,
+            d.amount,
             "Paid" if d.is_paid else "Unpaid"
         ])
     return Response(si.getvalue(), mimetype="text/csv", headers={
