@@ -5,12 +5,8 @@
 <table class="table">
   <thead>
     <tr>
-      <th>When</th>
-      <th>Item</th>
-      <th>Buyer</th>
-      <th>Recipients</th>
-      <th>Cost</th>
-      <th>Category</th>
+      <th>When</th><th>Item</th><th>Buyer</th><th>Recipients</th><th>Cost</th><th>Category</th>
+      {% if session.admin %}<th>Actions</th>{% endif %}
     </tr>
   </thead>
   <tbody>
@@ -26,9 +22,16 @@
         </td>
         <td>{{ t.cost }}</td>
         <td>{{ t.budget_category }}</td>
+        {% if session.admin %}
+        <td>
+          <form method="post">
+            <input type="hidden" name="delete_id" value="{{ t.id }}">
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endblock %}
-
