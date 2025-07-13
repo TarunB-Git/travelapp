@@ -175,21 +175,50 @@ def history_page():
 @views_bp.route("/budget-stats")
 @login_required
 def budget_stats():
-    data = defaultdict(lambda: defaultdict(float))  # date → category → total
+    from collections import defaultdict
+    from datetime import date
 
-    for t in Transaction.query.all():
-        day = t.timestamp.strftime("%Y-%m-%d")
-        data[day][t.budget_category] += t.cost
+    people = Person.query.all()
+    budgets = Budget.query.all()
+    transactions = Transaction.query.all()
 
-    # Sort by date
-    sorted_dates = sorted(data.keys())
-    categories = sorted({cat for day_data in data.values() for cat in day_data.keys()})
+    # Collect total spend per person per category for today
+    spend_map = defaultdict(lambda: defaultdict(float))  # person_id → category → total
 
-    totals = []
-    for day in sorted_dates:
-        row = {"date": day}
-        for cat in categories:
-            row[cat] = round(data[day].get(cat, 0), 2)
-        totals.append(row)
+    today = date.today()
+    for txn in transactions:
+        if txn.timestamp.date() == today:
+            split_cost = txn.cost / len(txn.recipients)
+            for r in txn.recipients:
+                spend_map[r.id][txn.budget_category] += split_cost
 
-    return render_template("budget_stats.html", totals=totals, categories=categories)
+    # Build table: each row is a person, each column is spent/limit and remaining
+    table_data = []
+    donut_data = []
+
+    for person in people:
+        row = {"name": person.name, "categories": []}
+        person_spend = spend_map.get(person.id, {})
+        for b in budgets:
+            if person not in b.people:
+                continue
+            spent = round(person_spend.get(b.category, 0), 2)
+            limit = b.daily_limit or 0
+            remaining = round(max(limit - spent, 0), 2)
+            row["categories"].append({
+                "category": b.category,
+                "spent": spent,
+                "limit": limit,
+                "remaining": remaining
+            })
+            donut_data.append({
+                "person": person.name,
+                "category": b.category,
+                "spent": spent,
+                "remaining": remaining
+            })
+        table_data.append(row)
+
+    return render_template("budget_stats.html", table=table_data, donut_data=donut_data)
+
+    
