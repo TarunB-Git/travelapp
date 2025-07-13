@@ -5,7 +5,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 
-    # ✅ this must be inside the class
-    SQLALCHEMY_BINDS = {
-        "messages": "sqlite:///instance/messages.db"
+    
     }
