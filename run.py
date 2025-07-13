@@ -7,7 +7,6 @@ app = create_app()
 
 with app.app_context():
     db.create_all()
-    messages_db.create_all()
     AdminCredentials.init()
     
 
