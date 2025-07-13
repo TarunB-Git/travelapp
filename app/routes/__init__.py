@@ -13,7 +13,7 @@ def register_blueprints(app: Flask) -> None:
         budget_bp,
         transaction_bp,
         debt_bp,
-export_bp,
+        export_bp,
         views_bp,
         auth_bp,  # Register auth routes so /login, /admin/login, etc. work
     ):
