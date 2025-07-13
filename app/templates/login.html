@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Enter Access Password</h2>
+<form method="post">
+  <input name="password" type="password" class="form-control mb-2" placeholder="Access password">
+  {% if error %}<div class="text-danger">{{ error }}</div>{% endif %}
+  <button class="btn btn-primary">Enter</button>
+</form>
+{% endblock %}
