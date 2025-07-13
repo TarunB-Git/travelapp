@@ -101,25 +101,24 @@ def transactions_page():
     from app.extensions import db
 
     if request.method == "POST":
-    try:
-        data = request.form
-        if "delete_id" in data:
-            try:
-                tid = int(data["delete_id"])
-                txn = Transaction.query.get(tid)
-                if txn:
-                    db.session.delete(txn)
-                    db.session.commit()
-                    from app.utils.debt_utils import recalculate_debts
-                    recalculate_debts()
-                return redirect(url_for("views_bp.transactions_page"))
-            except Exception as e:
-                db.session.rollback()
-                return f"Error deleting transaction: {e}", 500
-        # ...rest of your transaction creation logic...
-    except Exception as e:
-        db.session.rollback()
-        return f"Error: {e}", 500
+        try:
+            data = request.form
+
+            if "delete_id" in data:
+                try:
+                    tid = int(data["delete_id"])
+                    txn = Transaction.query.get(tid)
+                    if txn:
+                        db.session.delete(txn)
+                        db.session.commit()
+                        from app.utils.debt_utils import recalculate_debts
+                        recalculate_debts()
+                    return redirect(url_for("views_bp.transactions_page"))
+                except Exception as e:
+                    db.session.rollback()
+                    return f"Error deleting transaction: {e}", 500
+
+            # Transaction creation logic
             buyer_id = int(data["buyer_id"])
             cost = float(data["cost"])
             item = data["item_name"].strip()
@@ -151,11 +150,13 @@ def transactions_page():
             db.session.rollback()
             return f"Error: {e}", 500
 
+    # GET request
     people = Person.query.all()
     budgets = Budget.query.all()
     txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
 
     return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
+
 
 
 @views_bp.route("/transactions/import", methods=["POST"])
