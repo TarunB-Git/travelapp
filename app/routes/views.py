@@ -277,3 +277,12 @@ def group_page():
 
     return render_template("groups.html", people=people, groups=groups)
     
+@views_bp.route("/toggle-theme", methods=["POST"])
+def toggle_theme():
+    theme = session.get("theme", "light")
+    session["theme"] = "dark" if theme == "light" else "light"
+    return "", 204
+
+@views_bp.route("/get-theme")
+def get_theme():
+    return jsonify({"theme": session.get("theme", "light")})
