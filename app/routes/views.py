@@ -30,7 +30,7 @@ def admin_required(view_func):
 
 @views_bp.route("/")
 def home():
-    return redirect(url_for("views_bp.people_page"))
+    return redirect(url_for("views_bp.transactions_page"))
 
 
 @views_bp.route("/people", methods=["GET", "POST"])
