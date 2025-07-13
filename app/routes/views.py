@@ -6,6 +6,7 @@ from app.models.transaction import Transaction
 from app.models.debt import Debt
 from app.utils.debt_utils import recalculate_debts
 from functools import wraps
+from collections import defaultdict
 
 views_bp = Blueprint("views_bp", __name__)
 
@@ -71,23 +72,21 @@ def budgets_page():
                 db.session.add(b)
                 db.session.commit()
         elif action == "assign":
-    try:
-        bid = int(request.form["budget_id"])
-        pids = request.form.getlist("person_ids")
-        b = Budget.query.get(bid)
-        people = Person.query.filter(Person.id.in_(pids)).all()
-        if b:
-            b.people = people
-            db.session.commit()
-    except (KeyError, ValueError):
-        pass
-
+            try:
+                bid = int(request.form["budget_id"])
+                pids = request.form.getlist("person_ids")
+                b = Budget.query.get(bid)
+                people = Person.query.filter(Person.id.in_(pids)).all()
+                if b:
+                    b.people = people
+                    db.session.commit()
+            except (KeyError, ValueError):
+                pass
         elif action == "delete" and session.get("admin"):
             b = Budget.query.get(request.form.get("delete_id"))
             if b:
                 db.session.delete(b)
                 db.session.commit()
-
         return redirect(url_for(".budgets_page"))
 
     budgets = Budget.query.all()
@@ -139,12 +138,7 @@ def transactions_page():
     people = Person.query.all()
     budgets = Budget.query.all()
     txns = Transaction.query.all()
-    return render_template(
-        "transactions.html",
-        people=people,
-        budgets=budgets,
-        transactions=txns
-    )
+    return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
 
 @views_bp.route("/debts")
 @login_required
@@ -165,8 +159,6 @@ def history_page():
 
     txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
     return render_template("history.html", transactions=txns)
-from collections import defaultdict
-from flask import jsonify
 
 @views_bp.route("/budget-stats")
 @login_required
@@ -179,7 +171,7 @@ def budget_stats():
 
     # Sort by date
     sorted_dates = sorted(data.keys())
-    categories = sorted({cat for day in data.values() for cat in day.keys()})
+    categories = sorted({cat for day_data in data.values() for cat in day_data.keys()})
 
     totals = []
     for day in sorted_dates:
