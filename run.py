@@ -6,7 +6,10 @@ from app.models.credentials import AdminCredentials
 app = create_app()
 
 with app.app_context():
-    AdminCredentials.init()  # ← add this line
+    AdminCredentials.init()
+    db.create_all()
+    messages_db.create_all()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
