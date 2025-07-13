@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Groups</h2>
+
+<h4>Create New Group</h4>
+<form method="post" class="row g-2 mb-3">
+  <input type="hidden" name="action" value="create">
+  <div class="col-auto">
+    <input name="name" class="form-control" placeholder="Group name">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-primary">Add</button>
+  </div>
+</form>
+
+<h4>Assign Person to Group</h4>
+<form method="post" class="row g-2 mb-3">
+  <input type="hidden" name="action" value="assign">
+  <div class="col-auto">
+    <select name="person_id" class="form-select">
+      {% for p in people %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="group_id" class="form-select">
+      {% for g in groups %}
+        <option value="{{ g.id }}">{{ g.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-secondary">Assign</button>
+  </div>
+</form>
+
+<h4>Group Members</h4>
+<ul>
+  {% for g in groups %}
+    <li><strong>{{ g.name }}</strong>: {{ ", ".join(m.name for m in g.members) }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
