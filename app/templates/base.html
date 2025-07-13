@@ -60,12 +60,16 @@
 <button id="darkToggle" class="btn btn-sm btn-outline-light position-fixed bottom-0 end-0 m-3 z-3" onclick="toggleDark()">
   🌓
 </button>
-
 <script>
 function toggleDark() {
+  console.log("Toggle button clicked");
   const mode = document.body.dataset.bsTheme === "dark" ? "light" : "dark";
   document.body.dataset.bsTheme = mode;
-  fetch("/toggle-theme", { method: "POST", credentials: "same-origin" });
+
+  fetch("/toggle-theme", { method: "POST", credentials: "same-origin" })
+    .then(() => console.log("Theme toggled on server"))
+    .catch(err => console.error("Toggle error:", err));
+}
 
 window.addEventListener("DOMContentLoaded", () => {
   fetch("/get-theme", { credentials: "same-origin" })
@@ -73,10 +77,13 @@ window.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       if (data.theme) {
         document.body.dataset.bsTheme = data.theme;
+        console.log("Theme loaded:", data.theme);
       }
-    });
+    })
+    .catch(err => console.error("Get theme error:", err));
 });
 </script>
+
 
 </body>
 </html>
