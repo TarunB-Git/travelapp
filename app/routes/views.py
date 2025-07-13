@@ -5,14 +5,34 @@ from app.models.budget import Budget
 from app.models.transaction import Transaction
 from app.models.debt import Debt
 from app.utils.debt_utils import recalculate_debts
+from flask import session
+from functools import wraps
 
 views_bp = Blueprint("views_bp", __name__)
+
+def login_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        if not session.get("access_granted"):
+            return redirect(url_for("auth_bp.login"))
+        return view_func(*args, **kwargs)
+    return wrapper
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        if not session.get("admin"):
+            return redirect(url_for("auth_bp.admin_login"))
+        return view_func(*args, **kwargs)
+    return wrapper
+
 
 @views_bp.route("/")
 def home():
     return redirect(url_for("views_bp.people_page"))
 
 @views_bp.route("/people", methods=["GET", "POST"])
+@login_required
 def people_page():
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -26,6 +46,7 @@ def people_page():
     return render_template("people.html", people=people)
 
 @views_bp.route("/budgets", methods=["GET", "POST"])
+@login_required
 def budgets_page():
     if request.method == "POST":
         action = request.form.get("action")
@@ -59,6 +80,7 @@ def budgets_page():
     return render_template("budgets.html", budgets=budgets, people=people)
 
 @views_bp.route("/transactions", methods=["GET", "POST"])
+@login_required
 def transactions_page():
     if request.method == "POST":
         data = request.form
@@ -101,11 +123,13 @@ def transactions_page():
     )
 
 @views_bp.route("/debts")
+@login_required
 def debts_page():
     debts = Debt.query.all()
     return render_template("debts.html", debts=debts)
 
 @views_bp.route("/history")
+@login_required
 def history_page():
     txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
     return render_template("history.html", transactions=txns)
