@@ -71,16 +71,16 @@ def budgets_page():
                 db.session.add(b)
                 db.session.commit()
         elif action == "assign":
-            try:
-                bid = int(request.form["budget_id"])
-                pid = int(request.form["person_id"])
-                b = Budget.query.get(bid)
-                p = Person.query.get(pid)
-                if b and p:
-                    b.person_id = p.id
-                    db.session.commit()
-            except (KeyError, ValueError):
-                pass
+    try:
+        bid = int(request.form["budget_id"])
+        pids = request.form.getlist("person_ids")
+        b = Budget.query.get(bid)
+        people = Person.query.filter(Person.id.in_(pids)).all()
+        if b:
+            b.people = people
+            db.session.commit()
+    except (KeyError, ValueError):
+        pass
         elif action == "delete" and session.get("admin"):
             b = Budget.query.get(request.form.get("delete_id"))
             if b:
