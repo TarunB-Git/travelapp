@@ -179,43 +179,48 @@ def budget_stats():
     people = Person.query.all()
     budgets = Budget.query.all()
     transactions = Transaction.query.all()
-
-    # Collect total spend per person per category for today
-    spend_map = defaultdict(lambda: defaultdict(float))  # person_id → category → total
-
     today = date.today()
-    for txn in transactions:
-        if txn.timestamp.date() == today:
-            split_cost = txn.cost / len(txn.recipients)
-            for r in txn.recipients:
-                spend_map[r.id][txn.budget_category] += split_cost
 
-    # Build table: each row is a person, each column is spent/limit and remaining
+    # Map: person_id → category → total spent today
+    spend_map = defaultdict(lambda: defaultdict(float))
+    for txn in transactions:
+        if txn.timestamp.date() == today and txn.recipients:
+            per_person = txn.cost / len(txn.recipients)
+            for p in txn.recipients:
+                spend_map[p.id][txn.budget_category] += per_person
+
     table_data = []
     donut_data = []
 
     for person in people:
         row = {"name": person.name, "categories": []}
         person_spend = spend_map.get(person.id, {})
+
         for b in budgets:
             if person not in b.people:
                 continue
+
             spent = round(person_spend.get(b.category, 0), 2)
             limit = b.daily_limit or 0
             remaining = round(max(limit - spent, 0), 2)
+
             row["categories"].append({
                 "category": b.category,
                 "spent": spent,
                 "limit": limit,
                 "remaining": remaining
             })
+
             donut_data.append({
                 "person": person.name,
                 "category": b.category,
                 "spent": spent,
                 "remaining": remaining
             })
+
         table_data.append(row)
+
+    return render_template("budget_stats.html", table=table_data, donut_data=donut_data)
 
     return render_template("budget_stats.html", table=table_data, donut_data=donut_data)
 
