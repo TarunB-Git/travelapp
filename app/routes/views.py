@@ -96,48 +96,46 @@ def budgets_page():
 @views_bp.route("/transactions", methods=["GET", "POST"])
 @login_required
 def transactions_page():
+    from app.extensions import db
+
     if request.method == "POST":
-        if "delete_id" in request.form and session.get("admin"):
-            t = Transaction.query.get(request.form["delete_id"])
-            if t:
-                db.session.delete(t)
-                db.session.commit()
-                recalculate_debts()
-        elif "edit_id" in request.form and session.get("admin"):
-            t = Transaction.query.get(request.form["edit_id"])
-            new_item = request.form.get("new_item_name", "").strip()
-            if t and new_item:
-                t.item_name = new_item
-                db.session.commit()
-        else:
+        try:
             data = request.form
-            try:
-                rec_ids = [int(r) for r in data.getlist("recipient_ids")]
-                buyer_id = int(data["buyer_id"])
-                cost = float(data["cost"])
-                item = data["item_name"].strip()
-                cat = data["budget_category"].strip()
-            except (KeyError, ValueError):
-                return redirect(url_for(".transactions_page"))
+            buyer_id = int(data["buyer_id"])
+            cost = float(data["cost"])
+            item = data["item_name"].strip()
+            category = data["budget_category"].strip()
+            rec_ids = list(map(int, data.getlist("recipient_ids")))
 
             buyer = Person.query.get(buyer_id)
             recs = Person.query.filter(Person.id.in_(rec_ids)).all()
-            if buyer and len(recs) == len(rec_ids):
-                t = Transaction(
-                    item_name=item,
-                    cost=cost,
-                    buyer_id=buyer.id,
-                    budget_category=cat
-                )
-                t.recipients.extend(recs)
-                db.session.add(t)
-                db.session.commit()
-                recalculate_debts()
-        return redirect(url_for(".transactions_page"))
+
+            if not buyer or not recs:
+                return "Invalid buyer or recipients", 400
+
+            t = Transaction(
+                item_name=item,
+                cost=cost,
+                buyer_id=buyer.id,
+                budget_category=category
+            )
+            t.recipients.extend(recs)
+            db.session.add(t)
+            db.session.commit()
+
+            from app.utils.debt_utils import recalculate_debts
+            recalculate_debts()
+
+            return redirect(url_for("views_bp.transactions_page"))
+
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {e}", 500
 
     people = Person.query.all()
     budgets = Budget.query.all()
-    txns = Transaction.query.all()
+    txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
+
     return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
 
 @views_bp.route("/debts")
