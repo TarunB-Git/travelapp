@@ -1,11 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, request
+from flask import Blueprint, render_template, redirect, url_for, request, session
 from app.extensions import db
 from app.models.person import Person
 from app.models.budget import Budget
 from app.models.transaction import Transaction
 from app.models.debt import Debt
 from app.utils.debt_utils import recalculate_debts
-from flask import session
 from functools import wraps
 
 views_bp = Blueprint("views_bp", __name__)
@@ -26,7 +25,6 @@ def admin_required(view_func):
         return view_func(*args, **kwargs)
     return wrapper
 
-
 @views_bp.route("/")
 def home():
     return redirect(url_for("views_bp.people_page"))
@@ -35,11 +33,23 @@ def home():
 @login_required
 def people_page():
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        if name and not Person.query.filter_by(name=name).first():
-            p = Person(name=name)
-            db.session.add(p)
-            db.session.commit()
+        if "delete_id" in request.form and session.get("admin"):
+            p = Person.query.get(request.form["delete_id"])
+            if p:
+                db.session.delete(p)
+                db.session.commit()
+        elif "edit_id" in request.form and session.get("admin"):
+            p = Person.query.get(request.form["edit_id"])
+            new_name = request.form.get("new_name", "").strip()
+            if p and new_name:
+                p.name = new_name
+                db.session.commit()
+        else:
+            name = request.form.get("name", "").strip()
+            if name and not Person.query.filter_by(name=name).first():
+                p = Person(name=name)
+                db.session.add(p)
+                db.session.commit()
         return redirect(url_for(".people_page"))
 
     people = Person.query.all()
@@ -60,7 +70,6 @@ def budgets_page():
                 )
                 db.session.add(b)
                 db.session.commit()
-
         elif action == "assign":
             try:
                 bid = int(request.form["budget_id"])
@@ -71,7 +80,12 @@ def budgets_page():
                     b.person_id = p.id
                     db.session.commit()
             except (KeyError, ValueError):
-                print("Invalid budget/person assign form")
+                pass
+        elif action == "delete" and session.get("admin"):
+            b = Budget.query.get(request.form.get("delete_id"))
+            if b:
+                db.session.delete(b)
+                db.session.commit()
 
         return redirect(url_for(".budgets_page"))
 
@@ -83,33 +97,42 @@ def budgets_page():
 @login_required
 def transactions_page():
     if request.method == "POST":
-        data = request.form
-        try:
-            rec_ids = [int(r) for r in data.getlist("recipient_ids")]
-            buyer_id = int(data["buyer_id"])
-            cost = float(data["cost"])
-            item = data["item_name"].strip()
-            cat = data["budget_category"].strip()
-        except (KeyError, ValueError):
-            print("Invalid form submission")
-            return redirect(url_for(".transactions_page"))
+        if "delete_id" in request.form and session.get("admin"):
+            t = Transaction.query.get(request.form["delete_id"])
+            if t:
+                db.session.delete(t)
+                db.session.commit()
+                recalculate_debts()
+        elif "edit_id" in request.form and session.get("admin"):
+            t = Transaction.query.get(request.form["edit_id"])
+            new_item = request.form.get("new_item_name", "").strip()
+            if t and new_item:
+                t.item_name = new_item
+                db.session.commit()
+        else:
+            data = request.form
+            try:
+                rec_ids = [int(r) for r in data.getlist("recipient_ids")]
+                buyer_id = int(data["buyer_id"])
+                cost = float(data["cost"])
+                item = data["item_name"].strip()
+                cat = data["budget_category"].strip()
+            except (KeyError, ValueError):
+                return redirect(url_for(".transactions_page"))
 
-        buyer = Person.query.get(buyer_id)
-        recs = Person.query.filter(Person.id.in_(rec_ids)).all()
-        if not buyer or len(recs) != len(rec_ids):
-            print("Invalid buyer or recipient IDs")
-            return redirect(url_for(".transactions_page"))
-
-        t = Transaction(
-            item_name=item,
-            cost=cost,
-            buyer_id=buyer.id,
-            budget_category=cat
-        )
-        t.recipients.extend(recs)
-        db.session.add(t)
-        db.session.commit()
-        recalculate_debts()
+            buyer = Person.query.get(buyer_id)
+            recs = Person.query.filter(Person.id.in_(rec_ids)).all()
+            if buyer and len(recs) == len(rec_ids):
+                t = Transaction(
+                    item_name=item,
+                    cost=cost,
+                    buyer_id=buyer.id,
+                    budget_category=cat
+                )
+                t.recipients.extend(recs)
+                db.session.add(t)
+                db.session.commit()
+                recalculate_debts()
         return redirect(url_for(".transactions_page"))
 
     people = Person.query.all()
@@ -128,9 +151,16 @@ def debts_page():
     debts = Debt.query.all()
     return render_template("debts.html", debts=debts)
 
-@views_bp.route("/history")
+@views_bp.route("/history", methods=["GET", "POST"])
 @login_required
 def history_page():
+    if request.method == "POST" and session.get("admin"):
+        t = Transaction.query.get(request.form.get("delete_id"))
+        if t:
+            db.session.delete(t)
+            db.session.commit()
+            recalculate_debts()
+        return redirect(url_for(".history_page"))
+
     txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
     return render_template("history.html", transactions=txns)
-
