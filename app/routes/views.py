@@ -103,6 +103,19 @@ def transactions_page():
     if request.method == "POST":
         try:
             data = request.form
+            if "delete_id" in data:
+               try:
+                   tid = int(data["delete_id"])
+                   txn = Transaction.query.get(tid)
+                   if txn:
+                       db.session.delete(txn)
+                       db.session.commit()
+                       from app.utils.debt_utils import recalculate_debts
+                recalculate_debts()
+            return redirect(url_for("views_bp.transactions_page"))
+        except Exception as e:
+            db.session.rollback()
+            return f"Error deleting transaction: {e}", 500
             buyer_id = int(data["buyer_id"])
             cost = float(data["cost"])
             item = data["item_name"].strip()
