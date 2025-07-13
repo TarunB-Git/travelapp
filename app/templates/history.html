@@ -1,18 +1,33 @@
 {% extends "base.html" %}
 {% block body %}
 <h2>All Transactions (History)</h2>
+
 <table class="table">
-  <thead><tr><th>When</th><th>Item</th><th>Buyer</th><th>Recipients</th><th>Cost</th></tr></thead>
-  <tbody>
-  {% for t in transactions %}
+  <thead>
     <tr>
-      <td>{{ t.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
-      <td>{{ t.item_name }}</td>
-      <td>{{ t.buyer.name }}</td>
-      <td>{{ ", ".join([r.name for r in t.recipients]) }}</td>
-      <td>{{ t.cost }}</td>
+      <th>When</th>
+      <th>Item</th>
+      <th>Buyer</th>
+      <th>Recipients</th>
+      <th>Cost</th>
+      <th>Category</th>
     </tr>
-  {% endfor %}
+  </thead>
+  <tbody>
+    {% for t in transactions %}
+      <tr>
+        <td>{{ t.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ t.item_name }}</td>
+        <td>{{ t.buyer.name }}</td>
+        <td>
+          {% for r in t.recipients %}
+            {{ r.name }}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>{{ t.cost }}</td>
+        <td>{{ t.budget_category }}</td>
+      </tr>
+    {% endfor %}
   </tbody>
 </table>
 {% endblock %}
