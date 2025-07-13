@@ -146,19 +146,31 @@ def debts_page():
     debts = Debt.query.all()
     return render_template("debts.html", debts=debts)
 
+from sqlalchemy import and_
+from datetime import datetime
+
 @views_bp.route("/history", methods=["GET", "POST"])
 @login_required
 def history_page():
-    if request.method == "POST" and session.get("admin"):
-        t = Transaction.query.get(request.form.get("delete_id"))
-        if t:
-            db.session.delete(t)
-            db.session.commit()
-            recalculate_debts()
-        return redirect(url_for(".history_page"))
+    people = Person.query.all()
+    budgets = Budget.query.all()
+    txns = Transaction.query.order_by(Transaction.timestamp.desc())
 
-    txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
-    return render_template("history.html", transactions=txns)
+    person_id = request.args.get("person_id")
+    category = request.args.get("category")
+    start = request.args.get("start_date")
+    end = request.args.get("end_date")
+
+    if person_id:
+        txns = txns.filter(Transaction.buyer_id == person_id)
+    if category:
+        txns = txns.filter(Transaction.budget_category == category)
+    if start:
+        txns = txns.filter(Transaction.timestamp >= datetime.strptime(start, "%Y-%m-%d"))
+    if end:
+        txns = txns.filter(Transaction.timestamp <= datetime.strptime(end, "%Y-%m-%d"))
+
+    return render_template("history.html", transactions=txns.all(), people=people, budgets=budgets)
 
 @views_bp.route("/budget-stats")
 @login_required
