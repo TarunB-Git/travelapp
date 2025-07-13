@@ -6,7 +6,6 @@ from app.models.credentials import AdminCredentials
 app = create_app()
 
 with app.app_context():
-    db.create_all()
     AdminCredentials.init()  # ← add this line
 
 if __name__ == "__main__":
