@@ -34,3 +34,11 @@ def posts_page():
 
     posts = MessagePost.query.order_by(MessagePost.timestamp.desc()).all()
     return render_template("posts.html", posts=posts)
+
+@post_bp.route("/posts/delete/<int:post_id>")
+@admin_required
+def delete_post(post_id):
+    post = MessagePost.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(url_for("post_bp.posts_page"))
