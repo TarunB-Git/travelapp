@@ -2,6 +2,12 @@
 {% block body %}
 <h2>Transactions</h2>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Transactions</h2>
+  <a href="/export/transactions.csv" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+</div>
+
+
 <form method="post" class="row g-2 mb-4">
   <div class="col-md-2"><input name="item_name" placeholder="Item" class="form-control"></div>
   <div class="col-md-1"><input name="cost" type="number" step="0.01" placeholder="Cost" class="form-control"></div>
