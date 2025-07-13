@@ -1,16 +1,26 @@
 {% extends "base.html" %}
 {% block body %}
 <h2>Debts</h2>
-<table class="table">
-  <thead><tr><th>Lender</th><th>Borrower</th><th>Amount</th></tr></thead>
-  <tbody>
-  {% for d in debts %}
+<table class="table table-bordered table-sm">
+  <thead>
     <tr>
-      <td>{{ d.lender.name }}</td>
-      <td>{{ d.borrower.name }}</td>
-      <td>{{ d.amount }}</td>
+      <th>Person</th>
+      <th>Total Owed</th>
+      <th>Owed To</th>
+      {% for p in table[0].per_person %}<th>{{ p }}</th>{% endfor %}
     </tr>
-  {% endfor %}
+  </thead>
+  <tbody>
+    {% for row in table %}
+      <tr>
+        <td>{{ row.person }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ ", ".join(row.to) }}</td>
+        {% for val in row.per_person.values() %}
+          <td>{{ val }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
   </tbody>
 </table>
 {% endblock %}
