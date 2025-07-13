@@ -1,8 +1,10 @@
-from flask import render_template, request, redirect, url_for, session, Response
+from flask import render_template, request, redirect, url_for, session, Response, Blueprint
 from app.models import Person, Debt
 from app.extensions import db
 import csv
 from io import StringIO
+
+debt_bp= Blueprint("debt_bp", name)
 
 @debt_bp.route("/debts", methods=["GET", "POST"])
 @login_required
