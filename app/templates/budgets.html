@@ -13,20 +13,18 @@
 
 <hr>
 
-<h4>Assign Budget to Person</h4>
+<h4>Assign Budget to People</h4>
 <form method="post" class="row g-2 mb-3">
   <input type="hidden" name="action" value="assign">
   <div class="col-auto">
     <select name="budget_id" class="form-select">
-      <option value="">-- Select Budget --</option>
       {% for b in budgets %}
-        <option value="{{ b.id }}">{{ b.category }} (ID: {{ b.id }})</option>
+        <option value="{{ b.id }}">{{ b.category }}</option>
       {% endfor %}
     </select>
   </div>
   <div class="col-auto">
-    <select name="person_id" class="form-select">
-      <option value="">-- Select Person --</option>
+    <select name="person_ids" multiple class="form-select">
       {% for p in people %}
         <option value="{{ p.id }}">{{ p.name }}</option>
       {% endfor %}
