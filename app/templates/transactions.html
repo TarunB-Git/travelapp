@@ -5,11 +5,11 @@
   <h2>Transactions</h2>
   <a href="/export/transactions.csv" class="btn btn-outline-secondary btn-sm">Export CSV</a>
 </div>
-
-<form method="post" action="/transactions/import" enctype="multipart/form-data" class="mb-3">
+<form method="POST" action="{{ url_for('views_bp.import_transactions') }}" enctype="multipart/form-data" class="mb-3">
+  <label class="form-label fw-semibold">Import Transactions (.csv or .xlsx)</label>
   <div class="input-group input-group-sm">
-    <input type="file" name="file" accept=".xlsx" required class="form-control">
-    <button class="btn btn-outline-primary">Import Excel</button>
+    <input type="file" name="file" class="form-control" required>
+    <button class="btn btn-outline-primary">Import</button>
   </div>
 </form>
 
