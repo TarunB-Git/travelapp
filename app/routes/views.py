@@ -247,4 +247,32 @@ def budget_stats():
         selected_date=filter_date.isoformat()
     )
     
+@views_bp.route("/groups", methods=["GET", "POST"])
+@admin_required
+def group_page():
+    from app.extensions import db
+    people = Person.query.all()
+    groups = Group.query.order_by(Group.name).all()
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "create":
+            name = request.form.get("name", "").strip()
+            if name and not Group.query.filter_by(name=name).first():
+                db.session.add(Group(name=name))
+                db.session.commit()
+
+        elif action == "assign":
+            person_id = request.form.get("person_id")
+            group_id = request.form.get("group_id")
+            person = Person.query.get(person_id)
+            group = Group.query.get(group_id)
+            if person and group:
+                person.group_id = group.id
+                db.session.commit()
+
+        return redirect(url_for("views_bp.group_page"))
+
+    return render_template("groups.html", people=people, groups=groups)
     
