@@ -16,7 +16,11 @@
     <a class="nav-link" href="{{ url_for('views_bp.history_page') }}">History</a>
   </nav>
   <div class="container">
+    <body class="p-3">
+  <div class="container-fluid">
     {% block body %}{% endblock %}
+  </div>
+</body>
   </div>
 </body>
 </html>
