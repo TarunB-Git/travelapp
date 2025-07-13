@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 from app.extensions import db
 from app.models.person import Person
 from app.models.group import Group
+from flask import jsonify
 
 from app.models.budget import Budget
 from app.models.transaction import Transaction
