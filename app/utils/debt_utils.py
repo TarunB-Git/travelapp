@@ -1,30 +1,31 @@
+from app.models import Transaction, Person, Debt
 from app.extensions import db
-from app.models.transaction import Transaction
-from app.models.debt import Debt
 
-def recalculate_debts() -> None:
-    Debt.query.delete()
-    db.session.flush()
+def recalculate_debts():
+    db.session.query(Debt).delete()
 
-    totals = {}
-    for txn in Transaction.query.options(
-        db.joinedload(Transaction.recipients)
-    ).all():
-        num = len(txn.recipients)
-        if num == 0:
+    people = Person.query.all()
+    txns = Transaction.query.all()
+
+    for txn in txns:
+        if not txn.recipients:
             continue
-        share = txn.cost / num
+        per_head = txn.cost / len(txn.recipients)
+        buyer = txn.buyer
+
         for rec in txn.recipients:
-            if rec.id == txn.buyer_id:
+            if rec.id == buyer.id:
+                continue  # buyer doesn't owe self
+
+            # Skip if in same group
+            if buyer.group_id and buyer.group_id == rec.group_id:
                 continue
-            key = (txn.buyer_id, rec.id)
-            totals[key] = totals.get(key, 0.0) + share
 
-    for (lender_id, borrower_id), amount in totals.items():
-        db.session.add(Debt(
-            lender_id=lender_id,
-            borrower_id=borrower_id,
-            amount=amount
-        ))
+            debt = Debt.query.filter_by(debtor_id=rec.id, creditor_id=buyer.id, is_paid=False).first()
+            if debt:
+                debt.amount += per_head
+            else:
+                new_debt = Debt(debtor_id=rec.id, creditor_id=buyer.id, amount=per_head)
+                db.session.add(new_debt)
+
     db.session.commit()
-
