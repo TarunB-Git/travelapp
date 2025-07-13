@@ -65,10 +65,10 @@
 function toggleDark() {
   const mode = document.body.dataset.bsTheme === "dark" ? "light" : "dark";
   document.body.dataset.bsTheme = mode;
-  fetch("/toggle-theme", { method: "POST" });
-}
+  fetch("/toggle-theme", { method: "POST", credentials: "same-origin" });
+
 window.addEventListener("DOMContentLoaded", () => {
-  fetch("/get-theme")
+  fetch("/get-theme", { credentials: "same-origin" })
     .then(res => res.json())
     .then(data => {
       if (data.theme) {
