@@ -140,37 +140,14 @@ def transactions_page():
 
     return render_template("transactions.html", people=people, budgets=budgets, transactions=txns)
 
-import pandas as pd
-from openpyxl import load_workbook
-from app.extensions import db
-from app.models import Person, Transaction
-from app.utils.debt_utils import recalculate_debts
 
-def import_excel_transactions(file):
-    ext = file.filename.lower().split(".")[-1]
-    df = pd.read_excel(file) if ext == "xlsx" else pd.read_csv(file)
-
-    for _, row in df.iterrows():
-        buyer = Person.query.filter_by(name=str(row["buyer"]).strip()).first()
-        if not buyer:
-            continue
-
-        rec_names = str(row["recipients"]).split(",")
-        recipients = Person.query.filter(Person.name.in_([n.strip() for n in rec_names])).all()
-
-        txn = Transaction(
-            item_name=str(row["item"]).strip(),
-            cost=float(row["cost"]),
-            buyer_id=buyer.id,
-            budget_category=str(row["category"]).strip(),
-            timestamp=pd.to_datetime(row["timestamp"])
-        )
-        txn.recipients.extend(recipients)
-        db.session.add(txn)
-
-    db.session.commit()
-    recalculate_debts()
-
+@views_bp.route("/transactions/import", methods=["POST"])
+def import_transactions():
+    from app.utils.import_utils import import_excel_transactions
+    file = request.files.get("file")
+    if file and (file.filename.endswith(".xlsx") or file.filename.endswith(".csv")):
+        import_excel_transactions(file)
+    return redirect(url_for("views_bp.transactions_page"))
 
 
 @views_bp.route("/debts")
