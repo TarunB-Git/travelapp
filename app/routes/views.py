@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session
 from app.extensions import db
 from app.models.person import Person
+from app.models.group import Group
+
 from app.models.budget import Budget
 from app.models.transaction import Transaction
 from app.models.debt import Debt
