@@ -41,16 +41,24 @@
 
 <h4>All Budgets</h4>
 <table class="table">
-  <thead><tr><th>Category</th><th>Limits</th><th>Assigned To</th></tr></thead>
+  <thead><tr><th>Category</th><th>Limits</th><th>Assigned To</th><th>Actions</th></tr></thead>
   <tbody>
   {% for b in budgets %}
     <tr>
       <td>{{ b.category }}</td>
       <td>{{ b.daily_limit or '-' }} / {{ b.total_limit or '-' }}</td>
       <td>{{ b.person.name if b.person else '—' }}</td>
+      <td>
+        {% if session.admin %}
+        <form method="post" class="d-inline">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="delete_id" value="{{ b.id }}">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
 {% endblock %}
-
