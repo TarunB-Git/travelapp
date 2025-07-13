@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 {% block body %}
-<h2>Transactions</h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
- 
+  <h2>Transactions</h2>
   <a href="/export/transactions.csv" class="btn btn-outline-secondary btn-sm">Export CSV</a>
 </div>
+
+<form method="post" action="/transactions/import" enctype="multipart/form-data" class="mb-3">
+  <div class="input-group input-group-sm">
+    <input type="file" name="file" accept=".xlsx" required class="form-control">
+    <button class="btn btn-outline-primary">Import Excel</button>
+  </div>
+</form>
+
 
 
 <form method="post" class="row g-2 mb-4">
