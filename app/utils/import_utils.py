@@ -13,6 +13,7 @@ from app.utils.debt_utils import recalculate_debts
 def import_excel_transactions(file):
     ext = file.filename.lower().split(".")[-1]
     df = pd.read_excel(file) if ext == "xlsx" else pd.read_csv(file)
+    df.columns = df.columns.str.strip().str.lower()
 
     for _, row in df.iterrows():
         buyer = Person.query.filter_by(name=str(row["buyer"]).strip()).first()
