@@ -164,3 +164,27 @@ def history_page():
 
     txns = Transaction.query.order_by(Transaction.timestamp.desc()).all()
     return render_template("history.html", transactions=txns)
+from collections import defaultdict
+from flask import jsonify
+
+@views_bp.route("/budget-stats")
+@login_required
+def budget_stats():
+    data = defaultdict(lambda: defaultdict(float))  # date → category → total
+
+    for t in Transaction.query.all():
+        day = t.timestamp.strftime("%Y-%m-%d")
+        data[day][t.budget_category] += t.cost
+
+    # Sort by date
+    sorted_dates = sorted(data.keys())
+    categories = sorted({cat for day in data.values() for cat in day.keys()})
+
+    totals = []
+    for day in sorted_dates:
+        row = {"date": day}
+        for cat in categories:
+            row[cat] = round(data[day].get(cat, 0), 2)
+        totals.append(row)
+
+    return render_template("budget_stats.html", totals=totals, categories=categories)
