@@ -26,6 +26,10 @@
       <h5 class="card-title">{{ post.title or "Untitled" }}</h5>
       <p class="card-text">{{ post.body }}</p>
       <p class="text-muted small">By {{ post.author }} – {{ post.timestamp.strftime("%Y-%m-%d %H:%M") }}</p>
+{% if session.get("is_admin") %}
+  <a href="{{ url_for('post_bp.delete_post', post_id=post.id) }}" class="btn btn-sm btn-danger float-end">Delete</a>
+{% endif %}
+
       <img src="{{ post.image_path }}" class="img-fluid rounded" style="max-height: 200px;">
     </div>
   </div>
