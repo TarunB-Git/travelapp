@@ -37,6 +37,9 @@
   <div class="col-md-2"><button class="btn btn-primary">Add</button></div>
 </form>
 
+ <form method="POST" action="{{ url_for('views_bp.import_transactions') }}" enctype="multipart/form-data" class="mb-3">
+
+
 <table class="table">
   <thead><tr>
     <th>Item</th><th>Cost</th><th>Category</th><th>Buyer</th><th>Recipients</th><th>When</th>
