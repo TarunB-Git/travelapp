@@ -30,31 +30,30 @@ def admin_required(view_func):
 def home():
     return redirect(url_for("views_bp.people_page"))
 
+
 @views_bp.route("/people", methods=["GET", "POST"])
-@login_required
 def people_page():
     if request.method == "POST":
-        if "delete_id" in request.form and session.get("admin"):
-            p = Person.query.get(request.form["delete_id"])
-            if p:
-                db.session.delete(p)
-                db.session.commit()
-        elif "edit_id" in request.form and session.get("admin"):
-            p = Person.query.get(request.form["edit_id"])
-            new_name = request.form.get("new_name", "").strip()
-            if p and new_name:
-                p.name = new_name
-                db.session.commit()
-        else:
-            name = request.form.get("name", "").strip()
-            if name and not Person.query.filter_by(name=name).first():
-                p = Person(name=name)
-                db.session.add(p)
-                db.session.commit()
+        name = request.form.get("name", "").strip()
+        group_id = request.form.get("group_id")
+        if name and not Person.query.filter_by(name=name).first():
+            person = Person(name=name, group_id=group_id if group_id else None)
+            db.session.add(person)
+            db.session.commit()
         return redirect(url_for(".people_page"))
 
     people = Person.query.all()
-    return render_template("people.html", people=people)
+    groups = Group.query.all()
+    return render_template("people.html", people=people, groups=groups)
+
+@views_bp.route("/groups", methods=["POST"])
+def create_group():
+    name = request.form.get("group_name", "").strip()
+    if name and not Group.query.filter_by(name=name).first():
+        group = Group(name=name)
+        db.session.add(group)
+        db.session.commit()
+    return redirect(url_for(".people_page"))
 
 @views_bp.route("/budgets", methods=["GET", "POST"])
 @login_required
