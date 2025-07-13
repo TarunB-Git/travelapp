@@ -4,41 +4,33 @@ from app.extensions import db
 from app.utils.debt_utils import recalculate_debts
 from datetime import datetime
 
-def import_excel_transactions(file_stream):
-    wb = load_workbook(file_stream)
-    ws = wb.active
+import pandas as pd
+from openpyxl import load_workbook
+from app.extensions import db
+from app.models import Person, Transaction
+from app.utils.debt_utils import recalculate_debts
 
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        timestamp, item, cost, buyer_name, category, recipients_str = row
+def import_excel_transactions(file):
+    ext = file.filename.lower().split(".")[-1]
+    df = pd.read_excel(file) if ext == "xlsx" else pd.read_csv(file)
 
-        try:
-            buyer = Person.query.filter_by(name=buyer_name.strip()).first()
-            if not buyer:
-                continue
+    for _, row in df.iterrows():
+        buyer = Person.query.filter_by(name=str(row["buyer"]).strip()).first()
+        if not buyer:
+            continue
 
-            recipient_names = [r.strip() for r in recipients_str.split(",") if r.strip()]
-            recipients = Person.query.filter(Person.name.in_(recipient_names)).all()
-            if not recipients:
-                continue
+        rec_names = str(row["recipients"]).split(",")
+        recipients = Person.query.filter(Person.name.in_([n.strip() for n in rec_names])).all()
 
-            txn = Transaction(
-                item_name=item,
-                cost=float(cost),
-                buyer_id=buyer.id,
-                budget_category=category
-            )
-
-            # Optional: Set timestamp manually if your model supports it
-            if hasattr(txn, "timestamp") and timestamp:
-                try:
-                    txn.timestamp = datetime.strptime(str(timestamp), "%Y-%m-%d %H:%M:%S")
-                except:
-                    pass
-
-            txn.recipients.extend(recipients)
-            db.session.add(txn)
-        except Exception as e:
-            print("Error on row:", row, e)
+        txn = Transaction(
+            item_name=str(row["item"]).strip(),
+            cost=float(row["cost"]),
+            buyer_id=buyer.id,
+            budget_category=str(row["category"]).strip(),
+            timestamp=pd.to_datetime(row["timestamp"])
+        )
+        txn.recipients.extend(recipients)
+        db.session.add(txn)
 
     db.session.commit()
     recalculate_debts()
