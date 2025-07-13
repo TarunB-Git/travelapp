@@ -180,7 +180,6 @@ def budget_stats():
     groups = sorted(set(p.group.name for p in people if p.group))
     budgets = Budget.query.all()
 
-    # Filters
     selected_person = request.args.get("person")
     selected_group = request.args.get("group")
     selected_date = request.args.get("date")
@@ -191,16 +190,15 @@ def budget_stats():
 
     txns = Transaction.query.all()
 
-    spend_map = defaultdict(lambda: defaultdict(float))  # person_id → category → total
+    # person_id → category → total
+    spend_map = defaultdict(lambda: defaultdict(float))
 
     for txn in txns:
-        if txn.timestamp.date() != filter_date:
+        if txn.timestamp.date() != filter_date or not txn.recipients:
             continue
-        if not txn.recipients:
-            continue
-        split = txn.cost / len(txn.recipients)
+        share = txn.cost / len(txn.recipients)
         for rec in txn.recipients:
-            spend_map[rec.id][txn.budget_category] += split
+            spend_map[rec.id][txn.budget_category] += share
 
     table_data = []
     donut_data = []
@@ -211,17 +209,16 @@ def budget_stats():
         if selected_group and (not person.group or person.group.name != selected_group):
             continue
 
-        row = {"name": person.name, "categories": []}
         person_spend = spend_map.get(person.id, {})
+        row = {"name": person.name, "categories": []}
 
+        # Show all budgets, even if not spent
         for b in budgets:
             if person not in b.people:
                 continue
-
             spent = round(person_spend.get(b.category, 0), 2)
             limit = b.daily_limit or 0
             remaining = round(max(limit - spent, 0), 2)
-
             row["categories"].append({
                 "category": b.category,
                 "spent": spent,
@@ -229,7 +226,6 @@ def budget_stats():
                 "remaining": remaining,
                 "overrun": spent > limit
             })
-
             donut_data.append({
                 "person": person.name,
                 "category": b.category,
@@ -250,5 +246,5 @@ def budget_stats():
         selected_group=selected_group,
         selected_date=filter_date.isoformat()
     )
-
+    
     
