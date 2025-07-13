@@ -174,25 +174,43 @@ def history_page():
 @login_required
 def budget_stats():
     from collections import defaultdict
-    from datetime import date
+    from datetime import date, datetime
 
     people = Person.query.all()
+    groups = sorted(set(p.group.name for p in people if p.group))
     budgets = Budget.query.all()
-    transactions = Transaction.query.all()
-    today = date.today()
 
-    # Map: person_id → category → total spent today
-    spend_map = defaultdict(lambda: defaultdict(float))
-    for txn in transactions:
-        if txn.timestamp.date() == today and txn.recipients:
-            per_person = txn.cost / len(txn.recipients)
-            for p in txn.recipients:
-                spend_map[p.id][txn.budget_category] += per_person
+    # Filters
+    selected_person = request.args.get("person")
+    selected_group = request.args.get("group")
+    selected_date = request.args.get("date")
+    try:
+        filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
+    except:
+        filter_date = date.today()
+
+    txns = Transaction.query.all()
+
+    spend_map = defaultdict(lambda: defaultdict(float))  # person_id → category → total
+
+    for txn in txns:
+        if txn.timestamp.date() != filter_date:
+            continue
+        if not txn.recipients:
+            continue
+        split = txn.cost / len(txn.recipients)
+        for rec in txn.recipients:
+            spend_map[rec.id][txn.budget_category] += split
 
     table_data = []
     donut_data = []
 
     for person in people:
+        if selected_person and person.name != selected_person:
+            continue
+        if selected_group and (not person.group or person.group.name != selected_group):
+            continue
+
         row = {"name": person.name, "categories": []}
         person_spend = spend_map.get(person.id, {})
 
@@ -208,7 +226,8 @@ def budget_stats():
                 "category": b.category,
                 "spent": spent,
                 "limit": limit,
-                "remaining": remaining
+                "remaining": remaining,
+                "overrun": spent > limit
             })
 
             donut_data.append({
@@ -218,10 +237,18 @@ def budget_stats():
                 "remaining": remaining
             })
 
-        table_data.append(row)
+        if row["categories"]:
+            table_data.append(row)
 
-    return render_template("budget_stats.html", table=table_data, donut_data=donut_data)
-
-    return render_template("budget_stats.html", table=table_data, donut_data=donut_data)
+    return render_template(
+        "budget_stats.html",
+        table=table_data,
+        donut_data=donut_data,
+        people=people,
+        groups=groups,
+        selected_person=selected_person,
+        selected_group=selected_group,
+        selected_date=filter_date.isoformat()
+    )
 
     
