@@ -81,6 +81,7 @@ def budgets_page():
             db.session.commit()
     except (KeyError, ValueError):
         pass
+
         elif action == "delete" and session.get("admin"):
             b = Budget.query.get(request.form.get("delete_id"))
             if b:
