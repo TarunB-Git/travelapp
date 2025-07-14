@@ -4,7 +4,13 @@
 <form method="get" class="row g-2 mb-3">
   <div class="col-auto">
     <select name="person_id" class="form-select">
-      <option value="">-- Person --</option>
+      <option value="">-- Buyer --</option>
+      {% for p in people %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="recipient_id" class="form-select">
+      <option value="">-- Recipient --</option>
       {% for p in people %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
     </select>
   </div>
@@ -14,8 +20,8 @@
       {% for b in budgets %}<option>{{ b.category }}</option>{% endfor %}
     </select>
   </div>
-  <div class="col-auto"><input name="start_date" type="date" class="form-control"></div>
-  <div class="col-auto"><input name="end_date" type="date" class="form-control"></div>
+  <div class="col-auto"><input type="date" name="start_date" class="form-control"></div>
+  <div class="col-auto"><input type="date" name="end_date" class="form-control"></div>
   <div class="col-auto"><button class="btn btn-primary">Filter</button></div>
 </form>
 <table class="table">
