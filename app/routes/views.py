@@ -176,21 +176,24 @@ def debts_page():
 
 from sqlalchemy import and_
 from datetime import datetime
-
 @views_bp.route("/history", methods=["GET", "POST"])
 @login_required
 def history_page():
+    from datetime import datetime
     people = Person.query.all()
     budgets = Budget.query.all()
     txns = Transaction.query.order_by(Transaction.timestamp.desc())
 
     person_id = request.args.get("person_id")
+    recipient_id = request.args.get("recipient_id")
     category = request.args.get("category")
     start = request.args.get("start_date")
     end = request.args.get("end_date")
 
     if person_id:
-        txns = txns.filter(Transaction.buyer_id == person_id)
+        txns = txns.filter(Transaction.buyer_id == int(person_id))
+    if recipient_id:
+        txns = txns.filter(Transaction.recipients.any(Person.id == int(recipient_id)))
     if category:
         txns = txns.filter(Transaction.budget_category == category)
     if start:
