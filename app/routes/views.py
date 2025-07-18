@@ -185,15 +185,17 @@ def history_page():
     txns = Transaction.query.order_by(Transaction.timestamp.desc())
 
     person_id = request.args.get("person_id")
-    recipient_id = request.args.get("recipient_id")
+    recipient_ids = request.args.getlist("recipient_ids")
     category = request.args.get("category")
     start = request.args.get("start_date")
     end = request.args.get("end_date")
 
     if person_id:
         txns = txns.filter(Transaction.buyer_id == int(person_id))
-    if recipient_id:
-        txns = txns.filter(Transaction.recipients.any(Person.id == int(recipient_id)))
+    if recipient_ids:
+    txns = txns.filter(
+        Transaction.recipients.any(Person.id.in_(recipient_ids))
+    )
     if category:
         txns = txns.filter(Transaction.budget_category == category)
     if start:
