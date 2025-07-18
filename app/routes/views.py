@@ -194,7 +194,11 @@ def history_page():
         txns = txns.filter(Transaction.buyer_id == int(person_id))
     if recipient_ids:
     txns = txns.filter(
-        Transaction.recipients.any(Person.id.in_(recipient_ids))
+        if recipient_ids:
+    recipient_ids = [int(rid) for rid in recipient_ids]
+    conditions = [Transaction.recipients.any(Person.id == rid) for rid in recipient_ids]
+    from sqlalchemy import or_
+    txns = txns.filter(or_(*conditions))
     )
     if category:
         txns = txns.filter(Transaction.budget_category == category)
