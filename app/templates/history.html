@@ -9,7 +9,7 @@
     </select>
   </div>
   <div class="col-auto">
-    <select name="recipient_id" class="form-select">
+    <select name="recipient_ids" class="form-select" multiple>
       <option value="">-- Recipient --</option>
       {% for p in people %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
     </select>
