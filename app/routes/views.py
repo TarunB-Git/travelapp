@@ -176,10 +176,11 @@ def debts_page():
 
 from sqlalchemy import and_
 from datetime import datetime
+from sqlalchemy import or_
+
 @views_bp.route("/history", methods=["GET", "POST"])
 @login_required
 def history_page():
-    from datetime import datetime
     people = Person.query.all()
     budgets = Budget.query.all()
     txns = Transaction.query.order_by(Transaction.timestamp.desc())
@@ -192,23 +193,33 @@ def history_page():
 
     if person_id:
         txns = txns.filter(Transaction.buyer_id == int(person_id))
+
     if recipient_ids:
-    txns = txns.filter(
-        if recipient_ids:
-    recipient_ids = [int(rid) for rid in recipient_ids]
-    conditions = [Transaction.recipients.any(Person.id == rid) for rid in recipient_ids]
-    from sqlalchemy import or_
-    txns = txns.filter(or_(*conditions))
-    )
+        recipient_ids = [int(rid) for rid in recipient_ids]
+        recipient_conditions = [Transaction.recipients.any(Person.id == rid) for rid in recipient_ids]
+        txns = txns.filter(or_(*recipient_conditions))
+
     if category:
         txns = txns.filter(Transaction.budget_category == category)
+
     if start:
-        txns = txns.filter(Transaction.timestamp >= datetime.strptime(start, "%Y-%m-%d"))
+        try:
+            txns = txns.filter(Transaction.timestamp >= datetime.strptime(start, "%Y-%m-%d"))
+        except ValueError:
+            pass  # invalid date format, ignore
+
     if end:
-        txns = txns.filter(Transaction.timestamp <= datetime.strptime(end, "%Y-%m-%d"))
+        try:
+            txns = txns.filter(Transaction.timestamp <= datetime.strptime(end, "%Y-%m-%d"))
+        except ValueError:
+            pass  # invalid date format, ignore
 
-    return render_template("history.html", transactions=txns.all(), people=people, budgets=budgets)
-
+    return render_template(
+        "history.html",
+        transactions=txns.all(),
+        people=people,
+        budgets=budgets
+    )
 @views_bp.route("/budget-stats")
 @login_required
 def budget_stats():
