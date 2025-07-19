@@ -283,10 +283,21 @@ def budget_stats():
                 "remaining": remaining
             })
 
-        if row["categories"]:
-            table_data.append(row)
-
-    return render_template(
+            if row["categories"]:
+                table_data.append(row)
+# Total budget usage summary (non-daily)
+            total_summary = []
+            for b in budgets:
+                txns_for_budget = [t for t in txns if t.budget_category == b.category]
+            total_spent = sum(t.cost for t in txns_for_budget)
+            remaining = b.total_limit - total_spent if b.total_limit is not None else None
+            total_summary.append({
+                "category": b.category,
+                "spent": round(total_spent, 2),
+                "limit": b.total_limit,
+                "remaining": round(remaining, 2) if remaining is not None else None
+        })
+            return render_template(
         "budget_stats.html",
         table=table_data,
         donut_data=donut_data,
@@ -294,7 +305,8 @@ def budget_stats():
         groups=groups,
         selected_person=selected_person,
         selected_group=selected_group,
-        selected_date=filter_date.isoformat()
+        selected_date=filter_date.isoformat(),
+        total_summary=total_summary
     )
     
 @views_bp.route("/groups", methods=["GET", "POST"])
