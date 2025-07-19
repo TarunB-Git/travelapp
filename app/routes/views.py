@@ -240,15 +240,14 @@ def budget_stats():
 
     txns = Transaction.query.all()
 
-    # person_id → category → total
-    spend_map = defaultdict(lambda: defaultdict(float))
-
+    # === DAILY STATS ===
+    daily_spend_map = defaultdict(lambda: defaultdict(float))
     for txn in txns:
         if txn.timestamp.date() != filter_date or not txn.recipients:
             continue
         share = txn.cost / len(txn.recipients)
         for rec in txn.recipients:
-            spend_map[rec.id][txn.budget_category] += share
+            daily_spend_map[rec.id][txn.budget_category] += share
 
     table_data = []
     donut_data = []
@@ -259,10 +258,9 @@ def budget_stats():
         if selected_group and (not person.group or person.group.name != selected_group):
             continue
 
-        person_spend = spend_map.get(person.id, {})
+        person_spend = daily_spend_map.get(person.id, {})
         row = {"name": person.name, "categories": []}
 
-        # Show all budgets, even if not spent
         for b in budgets:
             if person not in b.people:
                 continue
@@ -283,30 +281,55 @@ def budget_stats():
                 "remaining": remaining
             })
 
-            if row["categories"]:
-                table_data.append(row)
-# Total budget usage summary (non-daily)
-            total_summary = []
-            for b in budgets:
-                txns_for_budget = [t for t in txns if t.budget_category == b.category]
-            total_spent = sum(t.cost for t in txns_for_budget)
-            remaining = b.total_limit - total_spent if b.total_limit is not None else None
-            total_summary.append({
+        if row["categories"]:
+            table_data.append(row)
+
+    # === CUMULATIVE STATS ===
+    total_spend_map = defaultdict(lambda: defaultdict(float))
+    for txn in txns:
+        if not txn.recipients:
+            continue
+        share = txn.cost / len(txn.recipients)
+        for rec in txn.recipients:
+            total_spend_map[rec.id][txn.budget_category] += share
+
+    cumulative_table = []
+    for person in people:
+        if selected_person and person.name != selected_person:
+            continue
+        if selected_group and (not person.group or person.group.name != selected_group):
+            continue
+
+        row = {"name": person.name, "categories": []}
+        person_spend = total_spend_map.get(person.id, {})
+
+        for b in budgets:
+            if person not in b.people:
+                continue
+            spent = round(person_spend.get(b.category, 0), 2)
+            limit = b.total_limit or 0
+            remaining = round(max(limit - spent, 0), 2)
+            row["categories"].append({
                 "category": b.category,
-                "spent": round(total_spent, 2),
-                "limit": b.total_limit,
-                "remaining": round(remaining, 2) if remaining is not None else None
-        })
-            return render_template(
+                "spent": spent,
+                "limit": limit,
+                "remaining": remaining,
+                "overrun": spent > limit
+            })
+
+        if row["categories"]:
+            cumulative_table.append(row)
+
+    return render_template(
         "budget_stats.html",
         table=table_data,
+        cumulative_table=cumulative_table,
         donut_data=donut_data,
         people=people,
         groups=groups,
         selected_person=selected_person,
         selected_group=selected_group,
-        selected_date=filter_date.isoformat(),
-        total_summary=total_summary
+        selected_date=filter_date.isoformat()
     )
     
 @views_bp.route("/groups", methods=["GET", "POST"])
