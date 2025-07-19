@@ -54,33 +54,30 @@
   </table>
 </div>
 
-<h4 class="mt-5">Total Budget Usage (Cumulative)</h4>
+<h4 class="mt-5">Cumulative Budget Usage</h4>
 <table class="table table-bordered table-striped table-sm">
   <thead class="table-light">
     <tr>
-      <th>Category</th>
-      <th>Total Spent</th>
-      <th>Total Limit</th>
-      <th>Remaining</th>
+      <th>Person</th>
+      {% for b in budgets %}
+        <th>{{ b.category }} (Spent / Limit)</th>
+        <th>{{ b.category }} Remaining</th>
+      {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for row in total_summary %}
-    <tr>
-      <td>{{ row.category }}</td>
-      <td>{{ row.spent }}</td>
-      <td>{{ row.limit if row.limit is not none else "∞" }}</td>
-      <td>
-        {% if row.remaining is not none %}
-          <span class="{{ 'text-danger' if row.remaining < 0 else 'text-success' }}">{{ row.remaining }}</span>
-        {% else %}
-          ∞
-        {% endif %}
-      </td>
-    </tr>
+    {% for row in cumulative_table %}
+      <tr>
+        <td>{{ row.name }}</td>
+        {% for c in row.categories %}
+          <td class="{{ 'text-danger' if c.overrun else '' }}">{{ c.spent }} / {{ c.limit }}</td>
+          <td>{{ c.remaining }}</td>
+        {% endfor %}
+      </tr>
     {% endfor %}
   </tbody>
 </table>
+
 <hr class="my-4">
 
 <div class="row">
