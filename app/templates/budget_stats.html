@@ -26,6 +26,7 @@
   <a href="/export/budget-stats.csv" class="btn btn-outline-secondary btn-sm">Export CSV</a>
 </div>
 
+<h4 class="mt-5"> Daily Budgets </h3>
 <div class="table-responsive">
   <table class="table table-bordered table-sm">
     <thead>
@@ -53,6 +54,33 @@
   </table>
 </div>
 
+<h4 class="mt-5">Total Budget Usage (Cumulative)</h4>
+<table class="table table-bordered table-striped table-sm">
+  <thead class="table-light">
+    <tr>
+      <th>Category</th>
+      <th>Total Spent</th>
+      <th>Total Limit</th>
+      <th>Remaining</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in total_summary %}
+    <tr>
+      <td>{{ row.category }}</td>
+      <td>{{ row.spent }}</td>
+      <td>{{ row.limit if row.limit is not none else "∞" }}</td>
+      <td>
+        {% if row.remaining is not none %}
+          <span class="{{ 'text-danger' if row.remaining < 0 else 'text-success' }}">{{ row.remaining }}</span>
+        {% else %}
+          ∞
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 <hr class="my-4">
 
 <div class="row">
