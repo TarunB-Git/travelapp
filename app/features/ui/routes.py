@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify
+from flask import Blueprint, current_app, render_template, redirect, url_for, request, session, jsonify
 from app.core.extensions import db
 from app.models.person import Person
 from app.models.group import Group
@@ -94,6 +94,7 @@ def transactions_page():
                     return redirect(url_for("views_bp.transactions_page"))
                 except Exception:
                     db.session.rollback()
+                    current_app.logger.exception("Error deleting transaction")
                     return "Error deleting transaction", 500
 
             # Transaction creation logic
@@ -126,6 +127,7 @@ def transactions_page():
 
         except Exception:
             db.session.rollback()
+            current_app.logger.exception("Error processing transaction")
             return "Error processing transaction", 500
 
     # GET request
