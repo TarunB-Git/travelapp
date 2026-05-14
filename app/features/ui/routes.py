@@ -78,8 +78,6 @@ def budgets_page():
 @views_bp.route("/transactions", methods=["GET", "POST"])
 @login_required
 def transactions_page():
-    from app.core.extensions import db
-
     if request.method == "POST":
         try:
             data = request.form
@@ -94,9 +92,9 @@ def transactions_page():
                         from app.shared.debt_utils import recalculate_debts
                         recalculate_debts()
                     return redirect(url_for("views_bp.transactions_page"))
-                except Exception as e:
+                except Exception:
                     db.session.rollback()
-                    return f"Error deleting transaction: {e}", 500
+                    return "Error deleting transaction", 500
 
             # Transaction creation logic
             buyer_id = int(data["buyer_id"])
@@ -126,9 +124,9 @@ def transactions_page():
 
             return redirect(url_for("views_bp.transactions_page"))
 
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            return f"Error: {e}", 500
+            return "Error processing transaction", 500
 
     # GET request
     people = Person.query.all()
@@ -315,7 +313,6 @@ def budget_stats():
 @views_bp.route("/groups", methods=["GET", "POST"])
 @admin_required
 def group_page():
-    from app.core.extensions import db
     people = Person.query.all()
     groups = Group.query.order_by(Group.name).all()
 
