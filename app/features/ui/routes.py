@@ -215,7 +215,7 @@ def budget_stats():
     selected_date = request.args.get("date")
     try:
         filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
-    except:
+    except ValueError:
         filter_date = date.today()
 
     txns = Transaction.query.all()
