@@ -1,4 +1,5 @@
 from flask import Blueprint, current_app, render_template, redirect, url_for, request, session, jsonify
+from uuid import uuid4
 from app.core.extensions import db
 from app.models.person import Person
 from app.models.group import Group
@@ -94,8 +95,9 @@ def transactions_page():
                     return redirect(url_for("views_bp.transactions_page"))
                 except Exception:
                     db.session.rollback()
-                    current_app.logger.exception("Error deleting transaction")
-                    return "Error deleting transaction", 500
+                    error_id = uuid4().hex
+                    current_app.logger.exception("Error deleting transaction (ref=%s)", error_id)
+                    return f"Error deleting transaction. Reference: {error_id}", 500
 
             # Transaction creation logic
             buyer_id = int(data["buyer_id"])
@@ -127,8 +129,9 @@ def transactions_page():
 
         except Exception:
             db.session.rollback()
-            current_app.logger.exception("Error processing transaction")
-            return "Error processing transaction", 500
+            error_id = uuid4().hex
+            current_app.logger.exception("Error processing transaction (ref=%s)", error_id)
+            return f"Error processing transaction. Reference: {error_id}", 500
 
     # GET request
     people = Person.query.all()
@@ -216,6 +219,7 @@ def budget_stats():
     try:
         filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
     except ValueError:
+        # Invalid date format falls back to today's date.
         filter_date = date.today()
 
     txns = Transaction.query.all()
