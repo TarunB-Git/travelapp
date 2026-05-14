@@ -80,25 +80,25 @@ def budgets_page():
 @login_required
 def transactions_page():
     if request.method == "POST":
+        data = request.form
+
+        if "delete_id" in data:
+            try:
+                tid = int(data["delete_id"])
+                txn = Transaction.query.get(tid)
+                if txn:
+                    db.session.delete(txn)
+                    db.session.commit()
+                    from app.shared.debt_utils import recalculate_debts
+                    recalculate_debts()
+                return redirect(url_for("views_bp.transactions_page"))
+            except Exception:
+                db.session.rollback()
+                error_id = uuid4().hex
+                current_app.logger.exception("Error deleting transaction (ref=%s)", error_id)
+                return f"Error deleting transaction. Reference: {error_id}", 500
+
         try:
-            data = request.form
-
-            if "delete_id" in data:
-                try:
-                    tid = int(data["delete_id"])
-                    txn = Transaction.query.get(tid)
-                    if txn:
-                        db.session.delete(txn)
-                        db.session.commit()
-                        from app.shared.debt_utils import recalculate_debts
-                        recalculate_debts()
-                    return redirect(url_for("views_bp.transactions_page"))
-                except Exception:
-                    db.session.rollback()
-                    error_id = uuid4().hex
-                    current_app.logger.exception("Error deleting transaction (ref=%s)", error_id)
-                    return f"Error deleting transaction. Reference: {error_id}", 500
-
             # Transaction creation logic
             buyer_id = int(data["buyer_id"])
             cost = float(data["cost"])
@@ -219,7 +219,7 @@ def budget_stats():
     try:
         filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
     except ValueError:
-        # Invalid date format falls back to today's date.
+        # Fall back to today's date so the dashboard remains usable on invalid input.
         filter_date = date.today()
 
     txns = Transaction.query.all()
