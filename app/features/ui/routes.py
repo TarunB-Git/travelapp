@@ -157,7 +157,6 @@ def debts_page():
     debts = Debt.query.all()
     return render_template("debts.html", debts=debts)
 
-from sqlalchemy import and_
 from datetime import datetime
 from sqlalchemy import or_
 
@@ -218,8 +217,7 @@ def budget_stats():
     selected_date = request.args.get("date")
     try:
         filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
-    except ValueError:
-        # Fall back to today's date so the dashboard remains usable on invalid input.
+    except ValueError:  # Fall back to today's date so the dashboard remains usable on invalid input.
         filter_date = date.today()
 
     txns = Transaction.query.all()
