@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, Response
 from app.models import Person, Debt
-from app.extensions import db
-from app.routes.views import login_required, admin_required
+from app.core.extensions import db
+from app.shared.auth import login_required, admin_required
 import csv
 from io import StringIO
 

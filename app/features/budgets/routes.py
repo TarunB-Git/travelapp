@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.extensions import db
+from app.core.extensions import db
 from app.models.budget import Budget
 from app.models.person import Person
 
@@ -39,4 +39,3 @@ def assign_budget():
     b.person_id = p.id
     db.session.commit()
     return jsonify({"id": b.id, "person_id": p.id}), 200
-

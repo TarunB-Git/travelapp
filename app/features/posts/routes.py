@@ -2,8 +2,8 @@ import os
 from flask import Blueprint, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from app.models.post import MessagePost
-from app.extensions import messages_db as db
-from app.routes.views import admin_required
+from app.core.extensions import messages_db as db
+from app.shared.auth import admin_required
 
 
 

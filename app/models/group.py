@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.core.extensions import db
 
 class Group(db.Model):
     __tablename__ = "person_group"  # ← add this to avoid 'group' conflict

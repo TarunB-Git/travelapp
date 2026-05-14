@@ -1,33 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, request, session
-from app.extensions import db
+from flask import Blueprint, render_template, redirect, url_for, request, session, jsonify
+from app.core.extensions import db
 from app.models.person import Person
 from app.models.group import Group
-from flask import jsonify
-
+from app.shared.auth import admin_required, login_required
 from app.models.budget import Budget
 from app.models.transaction import Transaction
 from app.models.debt import Debt
-from app.utils.debt_utils import recalculate_debts
-from functools import wraps
-from collections import defaultdict
 
 views_bp = Blueprint("views_bp", __name__)
-
-def login_required(view_func):
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if not session.get("access_granted"):
-            return redirect(url_for("auth_bp.login"))
-        return view_func(*args, **kwargs)
-    return wrapper
-
-def admin_required(view_func):
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if not session.get("admin"):
-            return redirect(url_for("auth_bp.admin_login"))
-        return view_func(*args, **kwargs)
-    return wrapper
 
 @views_bp.route("/")
 def home():
@@ -98,7 +78,7 @@ def budgets_page():
 @views_bp.route("/transactions", methods=["GET", "POST"])
 @login_required
 def transactions_page():
-    from app.extensions import db
+    from app.core.extensions import db
 
     if request.method == "POST":
         try:
@@ -111,7 +91,7 @@ def transactions_page():
                     if txn:
                         db.session.delete(txn)
                         db.session.commit()
-                        from app.utils.debt_utils import recalculate_debts
+                        from app.shared.debt_utils import recalculate_debts
                         recalculate_debts()
                     return redirect(url_for("views_bp.transactions_page"))
                 except Exception as e:
@@ -141,7 +121,7 @@ def transactions_page():
             db.session.add(t)
             db.session.commit()
 
-            from app.utils.debt_utils import recalculate_debts
+            from app.shared.debt_utils import recalculate_debts
             recalculate_debts()
 
             return redirect(url_for("views_bp.transactions_page"))
@@ -161,7 +141,7 @@ def transactions_page():
 
 @views_bp.route("/transactions/import", methods=["POST"])
 def import_transactions():
-    from app.utils.import_utils import import_excel_transactions
+    from app.shared.import_utils import import_excel_transactions
     file = request.files.get("file")
     if file and (file.filename.endswith(".xlsx") or file.filename.endswith(".csv")):
         import_excel_transactions(file)
@@ -335,7 +315,7 @@ def budget_stats():
 @views_bp.route("/groups", methods=["GET", "POST"])
 @admin_required
 def group_page():
-    from app.extensions import db
+    from app.core.extensions import db
     people = Person.query.all()
     groups = Group.query.order_by(Group.name).all()
 

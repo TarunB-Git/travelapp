@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.core.extensions import db
 from datetime import datetime
 
 transaction_recipient = db.Table(
@@ -22,4 +22,3 @@ class Transaction(db.Model):
         secondary=transaction_recipient,
         backref=db.backref("received_transactions", lazy="dynamic")
     )
-

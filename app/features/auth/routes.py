@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from app.models.credentials import AdminCredentials
-from app.extensions import db
+from app.core.extensions import db
 
 auth_bp = Blueprint("auth_bp", __name__)
 

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.extensions import db
+from app.core.extensions import db
 from app.models.person import Person
 
 person_bp = Blueprint("person_bp", __name__, url_prefix="/api/people")
@@ -24,4 +24,3 @@ def add_person():
     db.session.commit()
 
     return jsonify({"id": new.id, "name": new.name}), 201
-

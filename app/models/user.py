@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.core.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
@@ -11,4 +11,3 @@ class User(db.Model):
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
-
