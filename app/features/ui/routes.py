@@ -1,33 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, request, session
-from app.extensions import db
+from flask import Blueprint, current_app, render_template, redirect, url_for, request, session, jsonify
+from uuid import uuid4
+from app.core.extensions import db
 from app.models.person import Person
 from app.models.group import Group
-from flask import jsonify
-
+from app.shared.auth import admin_required, login_required
 from app.models.budget import Budget
 from app.models.transaction import Transaction
 from app.models.debt import Debt
-from app.utils.debt_utils import recalculate_debts
-from functools import wraps
-from collections import defaultdict
 
 views_bp = Blueprint("views_bp", __name__)
-
-def login_required(view_func):
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if not session.get("access_granted"):
-            return redirect(url_for("auth_bp.login"))
-        return view_func(*args, **kwargs)
-    return wrapper
-
-def admin_required(view_func):
-    @wraps(view_func)
-    def wrapper(*args, **kwargs):
-        if not session.get("admin"):
-            return redirect(url_for("auth_bp.admin_login"))
-        return view_func(*args, **kwargs)
-    return wrapper
 
 @views_bp.route("/")
 def home():
@@ -98,26 +79,26 @@ def budgets_page():
 @views_bp.route("/transactions", methods=["GET", "POST"])
 @login_required
 def transactions_page():
-    from app.extensions import db
-
     if request.method == "POST":
+        data = request.form
+
+        if "delete_id" in data:
+            try:
+                tid = int(data["delete_id"])
+                txn = Transaction.query.get(tid)
+                if txn:
+                    db.session.delete(txn)
+                    db.session.commit()
+                    from app.shared.debt_utils import recalculate_debts
+                    recalculate_debts()
+                return redirect(url_for("views_bp.transactions_page"))
+            except Exception:
+                db.session.rollback()
+                error_id = uuid4().hex
+                current_app.logger.exception("Error deleting transaction (ref=%s)", error_id)
+                return f"Error deleting transaction. Reference: {error_id}", 500
+
         try:
-            data = request.form
-
-            if "delete_id" in data:
-                try:
-                    tid = int(data["delete_id"])
-                    txn = Transaction.query.get(tid)
-                    if txn:
-                        db.session.delete(txn)
-                        db.session.commit()
-                        from app.utils.debt_utils import recalculate_debts
-                        recalculate_debts()
-                    return redirect(url_for("views_bp.transactions_page"))
-                except Exception as e:
-                    db.session.rollback()
-                    return f"Error deleting transaction: {e}", 500
-
             # Transaction creation logic
             buyer_id = int(data["buyer_id"])
             cost = float(data["cost"])
@@ -141,14 +122,16 @@ def transactions_page():
             db.session.add(t)
             db.session.commit()
 
-            from app.utils.debt_utils import recalculate_debts
+            from app.shared.debt_utils import recalculate_debts
             recalculate_debts()
 
             return redirect(url_for("views_bp.transactions_page"))
 
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            return f"Error: {e}", 500
+            error_id = uuid4().hex
+            current_app.logger.exception("Error processing transaction (ref=%s)", error_id)
+            return f"Error processing transaction. Reference: {error_id}", 500
 
     # GET request
     people = Person.query.all()
@@ -161,7 +144,7 @@ def transactions_page():
 
 @views_bp.route("/transactions/import", methods=["POST"])
 def import_transactions():
-    from app.utils.import_utils import import_excel_transactions
+    from app.shared.import_utils import import_excel_transactions
     file = request.files.get("file")
     if file and (file.filename.endswith(".xlsx") or file.filename.endswith(".csv")):
         import_excel_transactions(file)
@@ -174,7 +157,6 @@ def debts_page():
     debts = Debt.query.all()
     return render_template("debts.html", debts=debts)
 
-from sqlalchemy import and_
 from datetime import datetime
 from sqlalchemy import or_
 
@@ -235,7 +217,7 @@ def budget_stats():
     selected_date = request.args.get("date")
     try:
         filter_date = datetime.strptime(selected_date, "%Y-%m-%d").date() if selected_date else date.today()
-    except:
+    except ValueError:  # Fall back to today's date so the dashboard remains usable on invalid input.
         filter_date = date.today()
 
     txns = Transaction.query.all()
@@ -335,7 +317,6 @@ def budget_stats():
 @views_bp.route("/groups", methods=["GET", "POST"])
 @admin_required
 def group_page():
-    from app.extensions import db
     people = Person.query.all()
     groups = Group.query.order_by(Group.name).all()
 

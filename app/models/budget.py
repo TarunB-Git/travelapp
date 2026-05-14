@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.core.extensions import db
 
 budget_person = db.Table(
     "budget_person",

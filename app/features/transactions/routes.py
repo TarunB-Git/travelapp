@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from app.extensions import db
+from app.core.extensions import db
 from app.models.transaction import Transaction
 from app.models.person import Person
-from app.utils.debt_utils import recalculate_debts
+from app.shared.debt_utils import recalculate_debts
 from datetime import datetime
 
 transaction_bp = Blueprint("transaction_bp", __name__, url_prefix="/api/transactions")
@@ -49,4 +49,3 @@ def add_transaction():
 
     recalculate_debts()
     return jsonify({"id": t.id}), 201
-

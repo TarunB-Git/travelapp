@@ -1,4 +1,4 @@
-from app.extensions import messages_db as db
+from app.core.extensions import messages_db as db
 from datetime import datetime
 
 class MessagePost(db.Model):

@@ -1,5 +1,5 @@
 from app.models import Transaction, Person, Debt
-from app.extensions import db
+from app.core.extensions import db
 
 def recalculate_debts():
     db.session.query(Debt).delete()

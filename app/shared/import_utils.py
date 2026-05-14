@@ -1,14 +1,8 @@
-from openpyxl import load_workbook
-from app.models import Person, Transaction
-from app.extensions import db
-from app.utils.debt_utils import recalculate_debts
-from datetime import datetime
-
 import pandas as pd
 from openpyxl import load_workbook
-from app.extensions import db
+from app.core.extensions import db
 from app.models import Person, Transaction
-from app.utils.debt_utils import recalculate_debts
+from app.shared.debt_utils import recalculate_debts
 
 def import_excel_transactions(file):
     ext = file.filename.lower().split(".")[-1]
